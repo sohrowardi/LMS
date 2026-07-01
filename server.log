@@ -1,0 +1,19 @@
+INFO:     Started server process [31545]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51512 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51528 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51512 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51512 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48526 - "GET /api/search?q=superman&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60232 - "GET /api/search?q=a%3Blskdjf&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60008 - "GET /api/search?q=Nagendran%E2%80%99s%20Honeymoons&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60008 - "GET /api/search?q=Nagendran%E2%80%99s%20Honeymoons&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60008 - "GET /api/search?q=Nagendran%E2%80%99sHoneymoons&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60008 - "GET /api/search?q=Honeymoons&only_files=false HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52884 - "POST /api/shutdown HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [31545]
