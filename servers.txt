@@ -1,0 +1,16 @@
+# LMS server list
+# ------------------------------------------------------------------
+# One server per line. Order here = order results are grouped in.
+#
+# Two accepted formats (pick whichever you like, mix freely):
+#   http://10.16.100.5/movies/                <- just the URL
+#   Dhaka Flix 7 | http://10.16.100.5/movies/  <- friendly name + URL
+#
+# If you don't give a name, LMS derives one from the hostname/path.
+# Lines starting with # and blank lines are ignored.
+# ------------------------------------------------------------------
+
+# Example entries — replace these with your own local media servers.
+Dhaka Flix 7 | http://ftp7.dhakaflix.net/
+CN Server    | http://cndir.example.local/
+http://10.10.10.10/media/
