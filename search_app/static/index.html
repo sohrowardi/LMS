@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LMS — Local Media Search</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/3.4.1/tailwind.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+<div class="max-w-4xl mx-auto px-4 py-8">
+
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold tracking-tight">LMS <span class="text-slate-400 font-normal">— Local Media Search</span></h1>
+    <p id="stats" class="text-sm text-slate-500 mt-1">Loading index stats…</p>
+  </header>
+
+  <!-- Search box -->
+  <div class="relative mb-4">
+    <input id="searchBox" type="text" autofocus placeholder="Search your servers…"
+      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-lg
+             focus:outline-none focus:ring-2 focus:ring-sky-600 placeholder:text-slate-500" />
+  </div>
+
+  <!-- Filters -->
+  <div id="filters" class="flex flex-wrap gap-4 mb-6 text-sm"></div>
+
+  <!-- Results -->
+  <div id="results" class="space-y-6"></div>
+  <p id="emptyState" class="text-slate-500 text-sm hidden">No results.</p>
+</div>
+
+<script>
+const API = "";
+let fileTypes = { video: [], subtitle: [] };
+
+// ---------- icons ----------
+// One icon per *specific* known type — not a single generic icon lumped
+// across everything, per the "no generic icons for known file types" rule.
+const AUDIO_EXT = new Set([".mp3",".flac",".wav",".aac",".ogg",".m4a",".wma",".opus"]);
+const IMAGE_EXT = new Set([".jpg",".jpeg",".png",".gif",".webp",".bmp",".svg",".tiff"]);
+const ARCHIVE_EXT = new Set([".zip",".rar",".7z",".tar",".gz",".bz2",".xz"]);
+const DOC_EXT = new Set([".doc",".docx",".txt",".md",".rtf",".odt"]);
+const EXE_EXT = new Set([".exe",".sh",".bat",".msi",".appimage"]);
+
+function extOf(name) {
+  const i = name.lastIndexOf(".");
+  return i === -1 ? "" : name.slice(i).toLowerCase();
+}
+
+function iconFor(entry) {
+  if (entry.kind === "folder") return "📁";
+  if (entry.kind === "video") return "🎬";
+  if (entry.kind === "subtitle") return "💬";
+  const ext = extOf(entry.name);
+  if (ext === ".pdf") return "📕";
+  if (ext === ".iso") return "💿";
+  if (ext === ".nfo") return "ℹ️";
+  if (AUDIO_EXT.has(ext)) return "🎵";
+  if (IMAGE_EXT.has(ext)) return "🖼️";
+  if (ARCHIVE_EXT.has(ext)) return "🗜️";
+  if (DOC_EXT.has(ext)) return "📄";
+  if (EXE_EXT.has(ext)) return "⚙️";
+  return "📦";
+}
+
+// ---------- stats ----------
+async function loadStats() {
+  const r = await fetch(`${API}/api/stats`);
+  const s = await r.json();
+  document.getElementById("stats").textContent =
+    `${s.servers} server${s.servers === 1 ? "" : "s"} · ${s.folders.toLocaleString()} folders · ${s.files.toLocaleString()} files indexed`;
+}
+
+// ---------- filters (tri-state) ----------
+function buildFilters() {
+  const container = document.getElementById("filters");
+  container.innerHTML = "";
+
+  container.appendChild(buildSimpleFilter("folder", "📁 Folders"));
+
+  container.appendChild(buildGroupFilter("video", "🎬 Video files", fileTypes.video));
+  container.appendChild(buildGroupFilter("subtitle", "💬 Subtitles", fileTypes.subtitle));
+
+  container.appendChild(buildSimpleFilter("other", "📦 Other files"));
+}
+
+function buildSimpleFilter(key, label) {
+  const wrap = document.createElement("label");
+  wrap.className = "flex items-center gap-1.5 cursor-pointer select-none";
+  wrap.innerHTML = `<input type="checkbox" data-token="${key}" class="filter-cb accent-sky-600 w-4 h-4"> ${label}`;
+  return wrap;
+}
+
+function buildGroupFilter(kind, label, extensions) {
+  const wrap = document.createElement("div");
+  wrap.className = "flex flex-col";
+
+  const row = document.createElement("div");
+  row.className = "flex items-center gap-1.5";
+  row.innerHTML = `
+    <input type="checkbox" class="parent-cb accent-sky-600 w-4 h-4" data-kind="${kind}">
+    <label class="cursor-pointer select-none">${label}</label>
+    <button type="button" class="expand-btn text-slate-500 text-xs ml-1" title="show types">▸</button>
+  `;
+  wrap.appendChild(row);
+
+  const sub = document.createElement("div");
+  sub.className = "hidden flex flex-wrap gap-x-3 gap-y-1 mt-1 ml-6 text-xs text-slate-400";
+  extensions.forEach(ext => {
+    const cb = document.createElement("label");
+    cb.className = "flex items-center gap-1 cursor-pointer select-none";
+    cb.innerHTML = `<input type="checkbox" class="child-cb accent-sky-600 w-3.5 h-3.5" data-kind="${kind}" data-ext="${ext}"> ${ext}`;
+    sub.appendChild(cb);
+  });
+  wrap.appendChild(sub);
+
+  const expandBtn = row.querySelector(".expand-btn");
+  expandBtn.addEventListener("click", () => {
+    sub.classList.toggle("hidden");
+    expandBtn.textContent = sub.classList.contains("hidden") ? "▸" : "▾";
+  });
+
+  const parentCb = row.querySelector(".parent-cb");
+  const childCbs = () => Array.from(sub.querySelectorAll(".child-cb"));
+
+  parentCb.addEventListener("change", () => {
+    childCbs().forEach(cb => (cb.checked = parentCb.checked));
+    parentCb.indeterminate = false;
+    runSearch();
+  });
+
+  sub.addEventListener("change", () => {
+    const boxes = childCbs();
+    const checkedCount = boxes.filter(cb => cb.checked).length;
+    parentCb.checked = checkedCount === boxes.length;
+    parentCb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+    runSearch();
+  });
+
+  return wrap;
+}
+
+function currentFilterTokens() {
+  const tokens = [];
+  document.querySelectorAll(".filter-cb:checked").forEach(cb => tokens.push(cb.dataset.token));
+
+  document.querySelectorAll(".parent-cb").forEach(parentCb => {
+    const kind = parentCb.dataset.kind;
+    const wrap = parentCb.closest("div");
+    const childBoxes = Array.from(wrap.querySelectorAll(".child-cb"));
+    const checked = childBoxes.filter(cb => cb.checked);
+    if (parentCb.checked && !parentCb.indeterminate) {
+      tokens.push(kind); // select-all -> bare kind token
+    } else if (checked.length > 0) {
+      checked.forEach(cb => tokens.push(`${kind}:${cb.dataset.ext}`));
+    }
+  });
+
+  return tokens;
+}
+
+// ---------- search ----------
+let debounceTimer = null;
+function debouncedSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(runSearch, 120);
+}
+
+async function runSearch() {
+  const q = document.getElementById("searchBox").value.trim();
+  const resultsEl = document.getElementById("results");
+  const emptyEl = document.getElementById("emptyState");
+
+  if (!q) {
+    resultsEl.innerHTML = "";
+    emptyEl.classList.add("hidden");
+    return;
+  }
+
+  const filterParam = currentFilterTokens().join(",");
+  const url = `${API}/api/search?q=${encodeURIComponent(q)}&filter=${encodeURIComponent(filterParam)}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  renderResults(data.groups);
+}
+
+function humanSize(bytes) {
+  if (bytes === null || bytes === undefined) return "";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let i = 0, n = bytes;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+}
+
+function renderResults(groups) {
+  const resultsEl = document.getElementById("results");
+  const emptyEl = document.getElementById("emptyState");
+  resultsEl.innerHTML = "";
+
+  if (!groups || groups.length === 0) {
+    emptyEl.classList.remove("hidden");
+    return;
+  }
+  emptyEl.classList.add("hidden");
+
+  groups.forEach(group => {
+    const section = document.createElement("section");
+    const header = document.createElement("h2");
+    header.className = "text-sm font-semibold text-sky-400 uppercase tracking-wide mb-2";
+    header.textContent = group.server;
+    section.appendChild(header);
+
+    const list = document.createElement("div");
+    list.className = "divide-y divide-slate-800 rounded-lg border border-slate-800 overflow-hidden";
+
+    group.results.forEach(entry => {
+      const row = document.createElement("div");
+      row.className = "flex items-center gap-3 px-3 py-2 bg-slate-900 hover:bg-slate-800 transition-colors";
+
+      const icon = document.createElement("span");
+      icon.className = "text-lg shrink-0";
+      icon.textContent = iconFor(entry);
+
+      const name = document.createElement("a");
+      name.href = entry.url;
+      name.target = "_blank";
+      name.rel = "noopener noreferrer";
+      name.className = "flex-1 truncate hover:underline";
+      name.textContent = entry.name;
+      name.title = entry.full_path;
+
+      row.appendChild(icon);
+      row.appendChild(name);
+
+      if (entry.size_bytes) {
+        const size = document.createElement("span");
+        size.className = "text-xs text-slate-500 shrink-0";
+        size.textContent = humanSize(entry.size_bytes);
+        row.appendChild(size);
+      }
+
+      if (entry.kind === "video") {
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "text-xs bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded shrink-0";
+        copyBtn.textContent = "Copy Link";
+        copyBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          navigator.clipboard.writeText(entry.url);
+          copyBtn.textContent = "Copied!";
+          setTimeout(() => (copyBtn.textContent = "Copy Link"), 1200);
+        });
+        row.appendChild(copyBtn);
+      }
+
+      list.appendChild(row);
+    });
+
+    section.appendChild(list);
+    resultsEl.appendChild(section);
+  });
+}
+
+// ---------- init ----------
+async function init() {
+  loadStats();
+  const r = await fetch(`${API}/api/filetypes`);
+  fileTypes = await r.json();
+  buildFilters();
+
+  document.getElementById("searchBox").addEventListener("input", debouncedSearch);
+  document.addEventListener("change", (e) => {
+    if (e.target.classList.contains("filter-cb")) runSearch();
+  });
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# LMS server list
+# One server per line: Name | Base URL
+# Lines starting with # (or blank lines) are ignored.
+# The order below is the order servers appear in search results.
+# Edit this file any time — changes take effect on the NEXT scan you run.
+
+Server One | http://10.10.10.11/movies/
+Server Two | http://10.10.10.12/tv-shows/
+Server Three | http://10.10.10.13/anime/

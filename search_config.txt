@@ -1,0 +1,7 @@
+# LMS Search Site config
+#
+# access = local    -> only reachable from this computer (127.0.0.1)
+# access = network  -> reachable from any device on your home network
+#
+access = local
+port = 8000
