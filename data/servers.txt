@@ -4,6 +4,15 @@
 # The order below is the order servers appear in search results.
 # Edit this file any time — changes take effect on the NEXT scan you run.
 
-Server One | http://10.10.10.11/movies/
-Server Two | http://10.10.10.12/tv-shows/
-Server Three | http://10.10.10.13/anime/
+172.17.50.243 | http://172.17.50.243/
+DHAKA-FLIX-7 | http://172.16.50.7/DHAKA-FLIX-7/
+DHAKA-FLIX-8 | http://172.16.50.8/DHAKA-FLIX-8/
+DHAKA-FLIX-9 | http://172.16.50.9/DHAKA-FLIX-9/
+DHAKA-FLIX-10 | http://172.16.50.12/DHAKA-FLIX-12/
+DHAKA-FLIX-14 | http://172.16.50.14/DHAKA-FLIX-14/
+15.1.1.10 | http://15.1.1.10/
+dl.ctgfun | https://dl.ctgfun.com/
+media.ctgfun | https://media.ctgfun.com/
+movie.ctgfun | https://movie.ctgfun.com/
+data.ctgfun | https://data.ctgfun.com/
+ftp.ctgfun | https://ftp.ctgfun.com/
