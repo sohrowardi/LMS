@@ -2,65 +2,91 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LMS — Local Media Search</title>
 <link rel="stylesheet" href="/style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="app">
 
-  <div class="topbar">
-    <div class="brand-mark">lms</div>
-    <div class="brand-tag">— search across your local media servers, instantly</div>
-  </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">lms</span>
+      <span class="brand-tag">search across your local media servers, instantly</span>
+    </div>
+    <button type="button" class="filter-toggle" id="filterToggle" aria-expanded="false" aria-controls="filters">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="17" x2="20" y2="17"/><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="10" cy="17" r="1.6" fill="currentColor" stroke="none"/></svg>
+      <span>Filters</span>
+      <span class="filter-badge" id="filterBadge" hidden>0</span>
+    </button>
+  </header>
 
   <div class="search-shell" id="searchShell">
-    <span class="search-prompt">search&gt;</span>
-    <input id="searchInput" type="text" placeholder="type a file or folder name, press Enter…" autocomplete="off" spellcheck="false">
+    <svg class="search-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="searchInput" type="text" placeholder="Search a file or folder name, press Enter…" autocomplete="off" spellcheck="false" enterkeyhint="search">
+    <button type="button" class="clear-btn" id="clearBtn" hidden aria-label="Clear search">✕</button>
     <span class="search-hint">↵ Enter</span>
   </div>
 
   <div class="statsline" id="statsLine">loading index stats…</div>
 
   <div class="body-grid">
+    <div class="scrim" id="scrim"></div>
+
     <aside class="filters" id="filters">
-      <h3>Filter results</h3>
+      <div class="filters-head">
+        <h3>Filter results</h3>
+        <button type="button" class="filters-close" id="filtersClose" aria-label="Close filters">✕</button>
+      </div>
 
       <label class="check-row">
         <input type="checkbox" data-key="folders">
-        <span class="swatch folder"></span> Folders
+        <span class="box"></span>
+        <span class="swatch folder"></span>
+        <span class="check-label">Folders</span>
       </label>
 
       <div class="filter-divider"></div>
 
-      <div class="check-row">
-        <input type="checkbox" data-parent="video">
-        <span class="swatch video"></span> Video files
-        <button type="button" class="expand-btn" data-toggle="video">▸</button>
-      </div>
-      <div id="videoChildren"></div>
+      <label class="check-row parent-row" for="parentVideo">
+        <input type="checkbox" data-parent="video" id="parentVideo">
+        <span class="box"></span>
+        <span class="swatch video"></span>
+        <span class="check-label">Video files</span>
+        <button type="button" class="expand-btn" data-toggle="video" aria-label="Show video extensions">▸</button>
+      </label>
+      <div id="videoChildren" class="child-list"></div>
 
       <div class="filter-divider"></div>
 
-      <div class="check-row">
-        <input type="checkbox" data-parent="subtitle">
-        <span class="swatch sub"></span> Subtitles
-        <button type="button" class="expand-btn" data-toggle="subtitle">▸</button>
-      </div>
-      <div id="subChildren"></div>
+      <label class="check-row parent-row" for="parentSub">
+        <input type="checkbox" data-parent="subtitle" id="parentSub">
+        <span class="box"></span>
+        <span class="swatch sub"></span>
+        <span class="check-label">Subtitles</span>
+        <button type="button" class="expand-btn" data-toggle="subtitle" aria-label="Show subtitle extensions">▸</button>
+      </label>
+      <div id="subChildren" class="child-list"></div>
 
       <div class="filter-divider"></div>
 
       <label class="check-row">
         <input type="checkbox" data-key="other">
-        <span class="swatch other"></span> Other files
+        <span class="box"></span>
+        <span class="swatch other"></span>
+        <span class="check-label">Other files</span>
       </label>
+
+      <button type="button" class="apply-btn" id="applyFilters">Show results</button>
     </aside>
 
     <main class="results" id="results">
-      <div class="empty-state">Type above and press Enter to search your indexed media servers.</div>
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Type above and press <b>Enter</b> to search your indexed media servers.</p>
+      </div>
     </main>
   </div>
 

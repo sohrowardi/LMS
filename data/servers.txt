@@ -4,6 +4,36 @@
 # The order below is the order servers appear in search results.
 # Edit this file any time — changes take effect on the NEXT scan you run.
 
-Server One | http://10.10.10.11/movies/
-Server Two | http://10.10.10.12/tv-shows/
-Server Three | http://10.10.10.13/anime/
+172.17.50.243 | http://172.17.50.243/
+DHAKA-FLIX-7 | http://172.16.50.7/DHAKA-FLIX-7/
+DHAKA-FLIX-8 | http://172.16.50.8/DHAKA-FLIX-8/
+DHAKA-FLIX-9 | http://172.16.50.9/DHAKA-FLIX-9/
+DHAKA-FLIX-10 | http://172.16.50.12/DHAKA-FLIX-12/
+DHAKA-FLIX-14 | http://172.16.50.14/DHAKA-FLIX-14/
+15.1.1.10 | http://15.1.1.10/
+dl.ctgfun | https://dl.ctgfun.com/
+media.ctgfun | https://media.ctgfun.com/
+movie.ctgfun | https://movie.ctgfun.com/
+data.ctgfun | https://data.ctgfun.com/
+ftp.ctgfun | https://ftp.ctgfun.com/
+ftp4.circleftp | http://ftp4.circleftp.net/
+index.circleftp | http://index.circleftp.net/
+index1.circleftp | http://index1.circleftp.net/
+index2.circleftp | http://index2.circleftp.net/
+ftp2.circleftp | http://ftp2.circleftp.net/
+ftp3.circleftp | http://ftp3.circleftp.net/
+ftp4.circleftp/FILE | http://ftp4.circleftp.net/FILE/
+ftp5.circleftp | http://ftp5.circleftp.net/
+ftp6.circleftp | http://ftp6.circleftp.net/
+ftp7.circleftp | http://ftp7.circleftp.net/
+ftp8.circleftp | http://ftp8.circleftp.net/
+ftp9.circleftp | http://ftp9.circleftp.net/
+ftp10.circleftp | http://ftp10.circleftp.net/
+ftp11.circleftp | http://ftp11.circleftp.net/
+ftp12.circleftp | http://ftp12.circleftp.net/
+ftp13.circleftp | http://ftp13.circleftp.net/
+ftp14.circleftp | http://ftp14.circleftp.net/
+ftp15.circleftp | http://ftp15.circleftp.net/
+ftp16.circleftp | http://ftp16.circleftp.net/
+ftp17.circleftp | http://ftp17.circleftp.net/
+
