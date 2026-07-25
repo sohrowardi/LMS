@@ -3,5 +3,7 @@
 # access = local    -> only reachable from this computer (127.0.0.1)
 # access = network  -> reachable from any device on your home network
 #
+# Note: run_search.py now prompts you for this at every startup and
+# updates this file to match whatever you choose.
 access = local
 port = 8000

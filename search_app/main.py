@@ -26,6 +26,11 @@ KIND_RANK = {"folder": 0, "video": 1, "subtitle": 2, "other": 3}
 
 _TOKEN_RE = re.compile(r"\w+", re.UNICODE)
 
+_ROW_COLUMNS = """
+    e.id, e.server_id, e.name, e.full_path, e.parent_path, e.url, e.kind, e.size_bytes,
+    s.name AS server_name, s.position AS server_position
+"""
+
 
 def _build_fts_query(raw_query: str) -> str | None:
     """Turn free text into a prefix-matching FTS5 query, e.g.
@@ -44,9 +49,8 @@ def _run_search(conn: sqlite3.Connection, raw_query: str) -> list[sqlite3.Row]:
 
     try:
         rows = conn.execute(
-            """
-            SELECT e.id, e.server_id, e.name, e.full_path, e.url, e.kind, e.size_bytes,
-                   s.name AS server_name, s.position AS server_position
+            f"""
+            SELECT {_ROW_COLUMNS}
             FROM entries_fts f
             JOIN entries e ON e.id = f.rowid
             JOIN servers s ON s.id = e.server_id
@@ -60,15 +64,36 @@ def _run_search(conn: sqlite3.Connection, raw_query: str) -> list[sqlite3.Row]:
         # to a plain LIKE search rather than showing an error.
         like_term = f"%{raw_query.strip()}%"
         return conn.execute(
-            """
-            SELECT e.id, e.server_id, e.name, e.full_path, e.url, e.kind, e.size_bytes,
-                   s.name AS server_name, s.position AS server_position
+            f"""
+            SELECT {_ROW_COLUMNS}
             FROM entries e
             JOIN servers s ON s.id = e.server_id
             WHERE e.name LIKE ? ESCAPE '\\'
             """,
             (like_term,),
         ).fetchall()
+
+
+def _folder_descendants(
+    conn: sqlite3.Connection, server_id: int, folder_full_path: str
+) -> list[sqlite3.Row]:
+    """
+    Everything nested inside a matched folder, any depth — so that a
+    query matching only the folder's name still shows what's inside it.
+    Uses a plain prefix comparison (not LIKE) so folder names containing
+    '%' or '_' can't produce bogus matches.
+    """
+    return conn.execute(
+        f"""
+        SELECT {_ROW_COLUMNS}
+        FROM entries e
+        JOIN servers s ON s.id = e.server_id
+        WHERE e.server_id = ?
+          AND substr(e.full_path, 1, ?) = ?
+          AND e.full_path != ?
+        """,
+        (server_id, len(folder_full_path), folder_full_path, folder_full_path),
+    ).fetchall()
 
 
 def _extension(name: str) -> str:
@@ -100,32 +125,52 @@ def search(
 
     conn = get_connection(readonly=True)
     try:
-        rows = _run_search(conn, q) if q.strip() else []
-        rows = [r for r in rows if _passes_filter(r, filter_tokens)]
+        matched = _run_search(conn, q) if q.strip() else []
+
+        # A folder matching the query doesn't mean its contents matched
+        # too — pull those in explicitly so the folder isn't shown empty.
+        combined = {r["id"]: r for r in matched}
+        for r in matched:
+            if r["kind"] == "folder":
+                for child in _folder_descendants(conn, r["server_id"], r["full_path"]):
+                    combined.setdefault(child["id"], child)
+
+        rows = [r for r in combined.values() if _passes_filter(r, filter_tokens)]
         rows.sort(
             key=lambda r: (
                 r["server_position"],
+                r["parent_path"],
                 KIND_RANK.get(r["kind"], 99),
                 r["name"].lower(),
             )
         )
 
-        grouped: dict[str, dict] = {}
+        # Two-level grouping: server -> folder (parent_path). Order of
+        # groups follows the sort above, so insertion order is correct.
+        servers: dict[str, dict] = {}
         for r in rows:
-            grouped.setdefault(
-                r["server_name"], {"server": r["server_name"], "results": []}
-            )["results"].append(
+            server_group = servers.setdefault(
+                r["server_name"], {"server": r["server_name"], "folders": {}}
+            )
+            folder_group = server_group["folders"].setdefault(
+                r["parent_path"], {"path": r["parent_path"], "results": []}
+            )
+            folder_group["results"].append(
                 {
                     "name": r["name"],
                     "full_path": r["full_path"],
+                    "parent_path": r["parent_path"],
                     "url": r["url"],
                     "kind": r["kind"],
                     "size_bytes": r["size_bytes"],
                 }
             )
-        # preserve server display order even though dict insertion order
-        # already follows it (rows are sorted by server_position first)
-        return JSONResponse({"groups": list(grouped.values())})
+
+        groups = [
+            {"server": s["server"], "folders": list(s["folders"].values())}
+            for s in servers.values()
+        ]
+        return JSONResponse({"groups": groups})
     finally:
         conn.close()
 
