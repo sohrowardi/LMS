@@ -20,7 +20,9 @@ pip install -r requirements.txt
 
 ## 1. List your servers
 
-Edit `data/servers.txt` — one server per line:
+Edit data/servers.txt — one server per line in the format:
+
+Server Name | URL
 
 ```
 Server One | http://10.10.10.11/movies/
@@ -29,6 +31,8 @@ Server Two | http://10.10.10.12/tv-shows/
 
 The order here is the order servers appear in search results. Edit
 this file any time; changes take effect the next time you run a scan.
+
+If you don't want to manually write the server names and links, paste your collected server URLs into this [ChatGPT chat](https://chatgpt.com/share/6a65ff3f-c6c8-83e8-97f7-d6dc012481bd?utm_source=chatgpt.com), then copy the generated output into `data/servers.txt`.
 
 ## 2. Run the indexer
 
