@@ -1,5 +1,7 @@
 # LMS server list
 # One server per line: Name | Base URL
+# If you don't want to manually write the server names and links, paste your collected server URLs into this ChatGPT chat, then copy the generated output and paste it here:
+# https://chatgpt.com/share/6a65ff3f-c6c8-83e8-97f7-d6dc012481bd
 # Lines starting with # (or blank lines) are ignored.
 # The order below is the order servers appear in search results.
 # Edit this file any time — changes take effect on the NEXT scan you run.
